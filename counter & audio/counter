@@ -1,1 +1,76 @@
+module count_down (input clk, output reg[7:0]seg , output reg [3:0]ano,input reset );
+    reg [2:0]count = 3'd0;
+    wire slow_clk_1hz;
+    wire slow_clk_400hz;
+    reg [6:0] counter;
+    reg [3:0]digit;
+   
+    integer singles,tens;
+    flexible_clock_divider f0 (.basys_clock(clk),.m(30'd50000000),.my_slow_clock(slow_clk_1hz));
+    flexible_clock_divider f1 (.basys_clock(clk),.m(30'd125000),.my_slow_clock(slow_clk_400hz));
+    
 
+    always @(posedge slow_clk_1hz or posedge reset) begin
+        if (reset) begin
+            counter <= 99;
+        end else begin
+            if (counter < 7'd100 && counter >7'd0) begin
+                counter <= counter - 1;
+            end else begin
+                counter <= 99;
+            end 
+        
+        end
+        tens = counter % 10;
+        singles = counter / 10;      
+    end
+    always @(posedge slow_clk_400hz)begin
+        if (count == 3) begin
+            count <= 0;
+        end else begin
+            count <= count + 1;
+        end
+        case(count)
+            3'd0:begin ano <= 4'b1110;digit <= singles;end
+            3'd1:begin ano <= 4'b1101;digit <= tens; end
+            3'd2:ano <= 4'b1111;
+            3'd3:ano <= 4'b1111;
+        endcase
+        case (digit)
+                    4'd0: seg <= 8'b11000000;  // "0"
+                    4'd1: seg <= 8'b11111001;  // "1"
+                    4'd2: seg <= 8'b10100100;  // "2"
+                    4'd3: seg <= 8'b10110000;  // "3"
+                    4'd4: seg <= 8'b10011001;  // "4"
+                    4'd5: seg <= 8'b10010010;  // "5"
+                    4'd6: seg <= 8'b10000010;  // "6"
+                    4'd7: seg <= 8'b11111000;  // "7"
+                    4'd8: seg <= 8'b10000000;  // "8"
+                    4'd9: seg <= 8'b10010000;  // "9"
+                    default: seg <= 8'b11111111; // 关闭
+                endcase
+    end
+
+endmodule
+
+/////////////////////////////////////////////////////////////////////////////////
+
+module flexible_clock_divider(
+    input basys_clock,
+    input [31:0]m,
+    output reg my_slow_clock
+    );
+    
+    reg [31:0] COUNT;
+    
+    initial begin
+        COUNT = 0;
+        my_slow_clock = 1;
+    end
+    
+    always @ (posedge basys_clock) begin
+        COUNT <= ( COUNT == m ) ? 0 : COUNT + 1;
+        my_slow_clock <= ( COUNT == m ) ? ~my_slow_clock : my_slow_clock;
+    end
+    
+endmodule
