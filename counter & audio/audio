@@ -87,48 +87,6 @@ module audio_gen_bomb (
         sin_lut[252] = 8'h76; sin_lut[253] = 8'h79; sin_lut[254] = 8'h7C; sin_lut[255] = 8'h7F;
     end
 
-    // --- Phase Accumulator for Frequency Control ---
-    reg [15:0] phase_acc = 0;
-    wire [7:0] lut_addr = phase_acc[15:8];
-
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            phase_acc <= 0;
-        else if (sample_tick && playing)
-            phase_acc <= phase_acc + freq_step;
-    end
-
-    // --- Frequency Step Modulation ---
-    reg [15:0] freq_step;
-    always @(posedge clk) begin
-        if (playing)
-            if (playback_cnt <= 16'd1600)
-                freq_step <= 16'd2143; // 523 Hz
-            else if (playback_cnt <= 16'd3200)
-                freq_step <= 16'd2700; // 659 Hz
-            else if (playback_cnt <= 14'd4800)
-                freq_step <= 16'd3210; // 784 Hz
-            else
-                freq_step <= 16'd4286; // 1046 Hz
-        else 
-            freq_step <= 16'd0;
-    end
-
-    // --- Generate Sample (Fixed Maximum Volume) ---
-    wire [7:0] raw_sample = sin_lut[lut_addr];
-    wire [15:0] modulated_sample = raw_sample * 8'd255; // 最大音量
-    wire [7:0] sample = playing ? modulated_sample[15:8] : 8'd0;
-
-    // --- Button Edge Detector ---
-    reg btn_prev;
-    wire btn_posedge = (btn && !btn_prev);
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            btn_prev <= 0;
-        else
-            btn_prev <= btn;
-    end
-
     // --- Playback Control ---
     reg playing;
     reg [13:0] playback_cnt;
@@ -146,25 +104,74 @@ module audio_gen_bomb (
                 playback_cnt <= playback_cnt + 1;
         end
     end
-   
-    
 
+    // --- Button Edge Detector ---
+    reg btn_prev;
+    wire btn_posedge = (btn && !btn_prev);
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            btn_prev <= 0;
+        else
+            btn_prev <= btn;
+    end
 
+    // --- Frequency Step Modulation ---
+    wire [15:0] freq_step;
+    freq_control freq_ctrl (
+        .clk(clk),
+        .playing(playing),
+        .playback_cnt(playback_cnt),
+        .freq_step(freq_step)
+    );
 
-// --- PWM control ---
-reg [7:0] pwm_cnt = 0;
-always @(posedge clk or posedge reset) begin
-    if (reset)
-        pwm_cnt <= 0;
-    else
-        pwm_cnt <= pwm_cnt + 1;
-end
-assign pwm_out = (pwm_cnt < sample);
+    // --- Phase Accumulator for Frequency Control ---
+    reg [15:0] phase_acc = 0;
+    wire [7:0] lut_addr = phase_acc[15:8];
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            phase_acc <= 0;
+        else if (sample_tick && playing)
+            phase_acc <= phase_acc + freq_step;
+    end
+
+    // --- Generate Sample (Fixed Maximum Volume) ---
+    wire [7:0] raw_sample = sin_lut[lut_addr];
+    wire [15:0] modulated_sample = raw_sample * 8'd255; // 最大音量
+    wire [7:0] sample = playing ? modulated_sample[15:8] : 8'd0;
+
+    // --- PWM Generator (8-bit resolution) ---
+    reg [7:0] pwm_cnt = 0;
+    always @(posedge clk or posedge reset) begin
+        if (reset)
+            pwm_cnt <= 0;
+        else
+            pwm_cnt <= pwm_cnt + 1;
+    end
+    assign pwm_out = (pwm_cnt < sample);
 
     // --- GPIO Control ---
     assign gain = 1'b0;       
     assign shutdown_n = 1'b1; 
 
 endmodule
-
-
+////////////////////////////////////////////////////////////
+module freq_control (
+    input wire clk,              
+    input wire playing,          
+    input wire [13:0] playback_cnt, 
+    output reg [15:0] freq_step  
+);
+    always @(posedge clk) begin
+        if (playing)
+            if (playback_cnt <= 16'd1600)
+                freq_step <= 16'd2143; // 523 Hz
+            else if (playback_cnt <= 16'd3200)
+                freq_step <= 16'd2700; // 659 Hz
+            else if (playback_cnt <= 14'd4800)
+                freq_step <= 16'd3210; // 784 Hz
+            else
+                freq_step <= 16'd4286; // 1046 Hz
+        else 
+            freq_step <= 16'd0;
+    end
+endmodule
