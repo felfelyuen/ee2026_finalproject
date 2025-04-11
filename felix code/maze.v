@@ -52,11 +52,7 @@ module maze(
     debouncer dbounceRIGHT (pb[3], SLOWCLK_2kHZ, RIGHTbtn);
     debouncer dbounceLEFT (pb[2], SLOWCLK_2kHZ, LEFTbtn);
     debouncer dbounceCTRL (pb[4], SLOWCLK_2kHZ, CTRLbtn);
-    
-    //button_handler buttonner (SLOWCLK_10HZ, UPbtn, DOWNbtn, RIGHTbtn, LEFTbtn, CTRLbtn, counter);
-    //move_red_square redmove (SLOWCLK_6_25MHZ, x, y, counter, redsquare);
-    //show_maze task2 (SLOWCLK_6_25MHZ, x, y, counter, olede);
-    //pause_it pauspause (wire_to_cut, curr_colour, pauser);
+
     button_handler_two buttonner (SLOWCLK_10HZ, UPbtn, DOWNbtn, RIGHTbtn, LEFTbtn, CTRLbtn, counter, maze_state, begin_spot, pausesw, counter);
     show_maze_two task2 (SLOWCLK_6_25MHZ, x, y, counter, maze_state, olede);
     move_red_square_two redmove (SLOWCLK_6_25MHZ, x, y, counter, maze_state, curr_colour, redsquare, wire_to_cut, begin_spot);
