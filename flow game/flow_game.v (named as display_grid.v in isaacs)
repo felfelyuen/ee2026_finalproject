@@ -1,0 +1,219 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 13.03.2025 23:06:59
+// Design Name: 
+// Module Name: flow_game
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module flow_game(
+    input clk_1khz,
+    input pbUp,
+    input pbDown,
+    input pbLeft,
+    input pbRight,
+    input pbCenter,
+    input [6:0]x,
+    input [5:0]y,
+    input reset,
+    output reg [15:0] data,
+    output is_connected
+    );
+    
+    //xy coordinates for top left corner of rectangular selector box
+    reg [6:0]selector_x;
+    reg [5:0]selector_y;
+    
+    reg [6:0]curr_x;
+    reg [5:0]curr_y;
+    
+    reg prev_pbUp, prev_pbDown, prev_pbLeft, prev_pbRight, prev_pbCenter;
+        
+    //Colours
+    reg [15:0] pink, orange, red, blue, green, curr_colour;
+    reg [15:0] tile;
+        
+    wire [15:0] red_tile_data1, red_tile_data2, red_tile_data3, red_tile_data4,
+                green_tile_data1, green_tile_data2, green_tile_data3,
+                blue_tile_data1, blue_tile_data2,
+                pink_tile_data1, pink_tile_data2, pink_tile_data3,
+                orange_tile_data1, orange_tile_data2, orange_tile_data3;
+    
+    //Win conditions
+    wire [2:0] red_state1, red_state2, red_state3, red_state4,
+               green_state1, green_state2, green_state3,
+               blue_state1, blue_state2,
+               pink_state1, pink_state2, pink_state3,
+               orange_state1, orange_state2, orange_state3; 
+    wire red_win, green_win, blue_win, pink_win, orange_win;
+    
+    initial begin
+        selector_x = 0;
+        selector_y = 0;
+        prev_pbUp = 0;
+        prev_pbDown = 0;
+        prev_pbLeft = 0;
+        prev_pbRight = 0;
+        prev_pbCenter = 0;
+        red = 16'b11111_000000_00000;
+        green = 16'b00000_111111_00000;
+        blue = 16'b00000_000000_11111;
+        pink = 16'b11111_100000_01101;
+        orange = 16'b11111_101001_00000;
+        curr_colour = 16'b00000_000000_00000;
+        curr_x = 0;
+        curr_y = 0;
+        
+    end
+    
+    assign red_win = ( red_state1 == 3'b001 && red_state2 == 3'b001 && red_state3 == 3'b001 && red_state4 == 3'b011 ) ? 1 : 0;
+    assign green_win = ( green_state1 == 3'b110 && green_state2 == 3'b001 && green_state3 == 3'b001 ) ? 1 : 0;
+    assign blue_win = ( blue_state1 == 3'b001 && blue_state2 == 3'b001 ) ? 1 : 0;
+    assign pink_win = ( pink_state1 == 3'b110 && pink_state2 == 3'b001 && pink_state3 == 3'b001 ) ? 1 : 0;
+    assign orange_win = ( orange_state1 == 3'b001 && orange_state2 == 3'b001 && orange_state3 == 3'b100 ) ? 1 : 0;
+    assign is_connected = red_win & green_win & blue_win & pink_win & orange_win;
+    
+    //4 Red lines/tiles
+    vert_tile red_tile1 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(7), .tile_dy(17), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(red), .vert_tile_data(red_tile_data1), .state(red_state1));
+    vert_tile red_tile2 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(7), .tile_dy(30), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(red), .vert_tile_data(red_tile_data2), .state(red_state2));
+    vert_tile red_tile3 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(7), .tile_dy(43), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(red), .vert_tile_data(red_tile_data3), .state(red_state3));
+    vert_tile red_tile4 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(7), .tile_dy(56), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(red), .vert_tile_data(red_tile_data4), .state(red_state4));
+    //3 Green lines/tiles
+    vert_tile green_tile1 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(27), .tile_dy(4), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(green), .vert_tile_data(green_tile_data1), .state(green_state1));
+    vert_tile green_tile2 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(27), .tile_dy(17), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(green), .vert_tile_data(green_tile_data2), .state(green_state2));
+    vert_tile green_tile3 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(27), .tile_dy(30), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(green), .vert_tile_data(green_tile_data3), .state(green_state3));
+    //2 Blue lines/tiles
+    vert_tile blue_tile1 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(46), .tile_dy(30), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(blue), .vert_tile_data(blue_tile_data1), .state(blue_state1));
+    vert_tile blue_tile2 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(46), .tile_dy(43), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(blue), .vert_tile_data(blue_tile_data2), .state(blue_state2));
+    //3 Pink lines/tiles
+    vert_tile pink_tile1 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(65), .tile_dy(4), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(pink), .vert_tile_data(pink_tile_data1), .state(pink_state1));
+    vert_tile pink_tile2 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(65), .tile_dy(17), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(pink), .vert_tile_data(pink_tile_data2), .state(pink_state2));
+    vert_tile pink_tile3 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(65), .tile_dy(30), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(pink), .vert_tile_data(pink_tile_data3), .state(pink_state3));
+    //3 Orange lines/tiles
+    vert_tile orange_tile1 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(84), .tile_dy(30), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(orange), .vert_tile_data(orange_tile_data1), .state(orange_state1));
+    vert_tile orange_tile2 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(84), .tile_dy(43), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(orange), .vert_tile_data(orange_tile_data2), .state(orange_state2));
+    vert_tile orange_tile3 (.clk_1khz(clk_1khz), .pbCenter(pbCenter), .tile_dx(84), .tile_dy(56), .x(x), .y(y), .reset(reset),
+                        .selector_x(selector_x), .selector_y(selector_y), .colour(orange), .vert_tile_data(orange_tile_data3), .state(orange_state3));
+        
+    always @ (*) begin
+    //White 5x5 grid with Red selector box
+        if ((x >= selector_x && x <= selector_x + 19 && y == selector_y) //Top horizontal of selector box
+            || ((selector_y % 51 == 0) && (x >= selector_x && x <= selector_x + 19 && y == selector_y + 12)) //Bottom horizontal line for 13px width
+            || ((selector_y % 51 != 0) && (x >= selector_x && x <= selector_x + 19 && y == selector_y + 13)) //Bottom horizontal for 14px width
+            || ((selector_y % 51 == 0) && (x == selector_x && y >= selector_y && y <= selector_y + 12)) //13px Left vertical
+            || ((selector_y % 51 == 0) && (x == selector_x + 19 && y >= selector_y && y <= selector_y + 12)) //13px Right vertical
+            || ((selector_y % 51 != 0) && (x == selector_x && y >= selector_y && y <= selector_y + 13)) //14px Left vertical
+            || ((selector_y % 51 != 0) && (x == selector_x + 19 && y >= selector_y && y <= selector_y + 13)) //14px Right vertical
+            ) begin
+                data = red; //Red selector box
+            end else if (y == 12 || y == 25 || y == 38 || y == 51
+                        || (x % 19 == 0 && x != 95 && x != 0)) begin
+                data = 16'b11111_111111_11111; //White grid lines
+            end else if ((x >= 22 && x <= 35 && y >= 54 && y <= 61)
+                        || (x >= 2 && x <= 15 && y >= 2 && y <= 9)) begin //Red points
+                data = red;
+            end else if ((x >= 60 && x <= 73 && y >= 41 && y <= 48)
+                        || (x >= 79 && x <= 92 && y >= 2 && y <= 9)) begin //Pink points
+                data = pink;
+            end else if ((x >= 41 && x <= 54 && y >= 2 && y <= 9)
+                        || (x >= 22 && x <= 35 && y >= 41 && y <= 48)) begin //Green points
+                data = green;
+            end else if ((x >= 41 && x <= 54 && y >= 15 && y <= 22)
+                        || (x >= 41 && x <= 54 && y >= 54 && y <= 61)) begin //Blue points
+                data = blue;
+            end else if ((x >= 79 && x <= 92 && y >= 15 && y <= 22)
+                        || (x >= 60 && x <= 73 && y >= 54 && y <= 61)) begin //Orange points
+                data = orange;
+            end else if (x >= 1 && x <= 18 && y >= 13 && y <= 24) begin //Red lines
+                data = red_tile_data1;
+            end else if (x >= 1 && x <= 18 && y >= 26 && y <= 37) begin
+                data = red_tile_data2;
+            end else if (x >= 1 && x <= 18 && y >= 39 && y <= 50) begin
+                data = red_tile_data3;
+            end else if (x >= 1 && x <= 18 && y >= 54 && y <= 63) begin
+                data = red_tile_data4;
+            end else if (x >= 20 && x <= 37 && y >= 3 && y <= 12) begin //Green lines
+                data = green_tile_data1;
+            end else if (x >= 20 && x <= 37 && y >= 15 && y <= 26) begin
+                data = green_tile_data2;
+            end else if (x >= 20 && x <= 37 && y >= 28 && y <= 39) begin
+                data = green_tile_data3;
+            end else if (x >= 40 && x <= 55 && y >= 27 && y <= 36) begin //Blue lines
+                data = blue_tile_data1;
+            end else if (x >= 40 && x <= 55 && y >= 40 && y <= 49) begin
+                data = blue_tile_data2;
+            end else if (x >= 59 && x <= 74 && y >= 1 && y <= 10) begin //Pink lines
+                data = pink_tile_data1;
+            end else if (x >= 59 && x <= 74 && y >= 14 && y <= 23) begin
+                data = pink_tile_data2;
+            end else if (x >= 59 && x <= 74 && y >= 27 && y <= 36) begin
+                data = pink_tile_data3;
+            end else if (x >= 78 && x <= 94 && y >= 27 && y <= 36) begin //Orange lines
+                data = orange_tile_data1;
+            end else if (x >= 78 && x <= 94 && y >= 40 && y <= 49) begin
+                data = orange_tile_data2;
+            end else if (x >= 78 && x <= 94 && y >= 53 && y <= 62) begin
+                data = orange_tile_data3;
+            end else begin
+            data = 16'b00000_000000_00000; //Black background
+        end
+    end 
+
+    //Navigates selector
+    always @ (posedge clk_1khz) begin
+        if (!reset && !prev_pbUp && pbUp && !pbDown && !pbLeft && !pbRight && selector_y != 0) begin //pbup
+            selector_y <= ( selector_y == 12 ) ? 0 : selector_y - 13;
+        end else if (!reset && !prev_pbDown && !pbUp && pbDown && !pbLeft && !pbRight && selector_y != 51) begin //pbDown
+            selector_y <= ( selector_y == 0 ) ? 12 : selector_y + 13;
+        end else if (!reset && !prev_pbLeft && !pbUp && !pbDown && pbLeft && !pbRight && selector_x != 0) begin //pbLeft
+            selector_x <= selector_x - 19;
+        end else if (!reset && !prev_pbRight && !pbUp && !pbDown && !pbLeft && pbRight && selector_x != 76) begin //pbRight
+            selector_x <= selector_x + 19; 
+        end else if (!reset && !prev_pbCenter && pbCenter && !pbUp && !pbDown && !pbLeft && !pbRight) begin //pbCenter
+            curr_x <= selector_x + 7;
+            curr_y <= selector_y + 4;  
+        end else if (reset) begin
+            selector_x = 0;
+            selector_y = 0;
+            curr_x = 0;
+            curr_y = 0;
+        end else begin
+            selector_x <= selector_x;
+            selector_y <= selector_y;
+        end
+        prev_pbUp <= pbUp;
+        prev_pbDown <= pbDown;
+        prev_pbLeft <= pbLeft;
+        prev_pbRight <= pbRight;
+        prev_pbCenter <= pbCenter;
+    end    
+           
+endmodule
