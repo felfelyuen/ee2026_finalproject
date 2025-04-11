@@ -22,8 +22,8 @@
 
 module move_red_square_two(
     input CLK, //use 6.25MHZ clock
-    input [9:0] x,
-    input [6:0] y,
+    input [6:0] x,
+    input [5:0] y,
     input [7:0] count, //should update at 10HZ clock
     input [197:0] mazestate,
     input [2:0] curr_colour,
