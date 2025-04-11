@@ -24,15 +24,19 @@ module pause_it (
     input [2:0] curr_colour,
     output reg pause
 );
-initial begin
-pause = 1;
-end
+    reg [2:0] prev_curr; reg [2:0] prev_wire;
 
-    always @ (wire_to_cut) begin
+    initial begin
         pause = 1;
+        prev_curr = 3'b000;
+        prev_wire = 3'b000;
     end
-    
-    always @(curr_colour) begin
-         pause = 0;
+
+    always @ (*) begin
+        if (curr_colour == 0) begin
+            pause = 1;
+        end else begin
+            pause = 0;
+        end
     end
 endmodule
