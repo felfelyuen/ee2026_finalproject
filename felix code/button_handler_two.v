@@ -39,7 +39,7 @@ module button_handler_two(
     end
     
     always @(posedge CLK) begin 
-        if (game_pause) begin
+        if (game_pause == 0) begin
         end else
         if (next_count == 255 & CTRLbtn) begin
             next_count = begin_spot;
