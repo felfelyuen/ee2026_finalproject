@@ -22,8 +22,8 @@
 
 module show_maze_two(
     input CLK,
-    input [9:0] x,
-    input [6:0] y,
+    input [6:0] x,
+    input [5:0] y,
     input [7:0] counter,
     input [197:0] mazestate,
     output reg [15:0] olede
