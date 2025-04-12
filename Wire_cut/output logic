@@ -1,0 +1,59 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 11.04.2025 20:29:21
+// Design Name: 
+// Module Name: output_logic
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module output_logic(
+    input slow_clk,
+    input [2:0] cursor_state,
+    input [2:0] internal_state,
+    output reg [15:0] oled_data,
+    input [6:0] x,
+    input [5:0] y
+);
+
+    wire [15:0] red_oled_data;
+    wire [15:0] green_oled_data;
+    wire [15:0] blue_oled_data;
+    wire [15:0] pink_oled_data;
+    wire [15:0] orange_oled_data;
+
+    draw_func_r red (.cursor_state(cursor_state), .internal_state(internal_state), .x(x), .y(y), .red_oled_data(red_oled_data));
+    draw_func_g green (.cursor_state(cursor_state), .internal_state(internal_state), .x(x), .y(y), .green_oled_data(green_oled_data));
+    draw_func_b blue (.cursor_state(cursor_state), .internal_state(internal_state), .x(x), .y(y), .blue_oled_data(blue_oled_data)); 
+    draw_func_p pink (.cursor_state(cursor_state), .internal_state(internal_state), .x(x), .y(y), .pink_oled_data(pink_oled_data));
+    draw_func_o orange (.cursor_state(cursor_state), .internal_state(internal_state), .x(x), .y(y), .orange_oled_data(orange_oled_data));
+
+    always @(*) begin
+        if (x >= 6 && x <= 21) begin
+            oled_data <= red_oled_data;
+        end else if (x >= 22 && x <= 39) begin
+            oled_data <= green_oled_data;
+        end else if (x >= 40 && x <= 56) begin
+            oled_data <= blue_oled_data;
+        end else if (x >= 57 && x <= 73) begin
+            oled_data <= pink_oled_data;
+        end else if (x >= 74 && x <= 90) begin
+            oled_data <= orange_oled_data;
+        end else begin
+            oled_data <= 0;
+        end
+    end
+
+endmodule
