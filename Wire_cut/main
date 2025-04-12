@@ -1,0 +1,51 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 12.04.2025 11:00:26
+// Design Name: 
+// Module Name: top_studentmain_ryan
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module top_studentmain_ryan(
+    input basys_clock,
+    input [4:0] pb,
+    input [15:0] sw,
+    output [15:0] led,
+    output [7:0] JC
+
+    );
+    
+        wire fb_2, send_pix_2, sample_pix_2;
+        wire [15:0] oled_data_3;
+        wire [12:0] pixel_index_2;
+        wire [6:0] x;
+        wire [5:0] y;
+        wire slow_clock;
+    
+        coord_system convertor (.pixel_index(pixel_index_2), .x(x), .y(y));
+        flexible_clock_divider slow_6p25MHz (basys_clock, 7, slow_clock);
+        
+        Oled_Display display(
+            .clk(slow_clock), .reset(0), .frame_begin(fb_2), .sending_pixels(send_pix_2),
+            .sample_pixel(sample_pix_2), .pixel_index(pixel_index_2), .pixel_data(oled_data_3), 
+            .cs(JC[0]), .sdin(JC[1]), .sclk(JC[3]), .d_cn(JC[4]), .resn(JC[5]), 
+            .vccen(JC[6]), .pmoden(JC[7])
+        ); 
+        
+        Top_Student_ryan fa3 (.slow_clock(slow_clock), .pb(pb), .sw(sw), .oled_data(oled_data_3), .led(led), .x(x), .y(y));
+        
+endmodule
