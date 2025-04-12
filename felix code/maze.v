@@ -55,7 +55,7 @@ module maze(
 
     button_handler_two buttonner (SLOWCLK_10HZ, RESET, DOWNbtn, UPbtn, LEFTbtn, RIGHTbtn, CTRLbtn, counter, maze_state, begin_spot, pausesw, counter);
 
-    move_red_square_two redmove (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, 3'b010, redsquare, wire_to_cut, begin_spot);
+    move_red_square_two redmove (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, curr_colour, redsquare, wire_to_cut, begin_spot);
     switch_handler switcheroo (SLOWCLK_6_25MHZ, sw1, sw2, sw3, x, y, switchh);
     show_maze_two task2 (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, redsquare, switchh, olede);
     assign oled_data = olede;
