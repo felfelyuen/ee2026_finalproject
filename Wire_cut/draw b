@@ -1,0 +1,56 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 18.03.2025 15:06:19
+// Design Name: 
+// Module Name: draw_func_b
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module draw_func_b(
+    input [2:0] cursor_state,
+    input [2:0] internal_state, 
+    input [6:0] x, 
+    input [5:0] y, 
+    output reg [15:0] blue_oled_data
+);
+
+    localparam BLUE  = 16'b00000_000000_11111;
+    localparam WHITE = 16'b11111_111111_11111;
+
+    wire x_bar = (x >= 45 && x <= 50);
+    wire edge_section = (y <= 26 || y >= 37);
+    wire center_white_section = (x >= 40 && x <= 42 || x >= 46 && x <= 50 || x >= 53 && x <= 56) && (y >= 30 && y <= 33);
+
+    wire is_cursor = (cursor_state == 3'd3);
+    wire is_cut = internal_state >= 3'd4;
+
+    always @(*) begin
+        blue_oled_data = 0;
+
+        if (!is_cut && !is_cursor) begin
+            if (x_bar) blue_oled_data = BLUE;
+        end else if (!is_cut && is_cursor) begin
+            if (x_bar) blue_oled_data = BLUE;
+            if (center_white_section) blue_oled_data = WHITE;
+        end else if (is_cut && !is_cursor) begin
+            if (x_bar && edge_section) blue_oled_data = BLUE;
+        end else if (is_cut && is_cursor) begin
+            if (x_bar && edge_section) blue_oled_data = BLUE;
+            if (center_white_section) blue_oled_data = WHITE;
+        end
+    end
+
+endmodule
