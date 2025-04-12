@@ -120,7 +120,8 @@ module Top_Student (
     wire [2:0] wire_to_cut;
     //curr_colour from isaac, wire_to_cut to ryan
 
-    maze mazee (basys_clock, pb, x_two, y_two, sw[15], sw[14], sw[13], sw[1], curr_colour, oled_data_two, wire_to_cut);
+    maze mazee (basys_clock, sw[0], pb, x_two, y_two, sw[13], sw[14], sw[15], sw[1], curr_colour, oled_data_two, wire_to_cut);
+
 //=========================================================
 
 endmodule
