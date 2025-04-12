@@ -75,17 +75,17 @@ module cursor_pos(
                             end
                         3'd2: if (wire_to_cut == 3'd2 && state == 3'd1) begin 
                             internal_state <= 3'd3; wire_cut <= 3'd2;
-                        end else if (wire_to_cut == 3'd2 && state != 3'b100) begin 
+                        end else if (state != 3'b100) begin 
                             wire_cut <= 3'd7; 
                         end
                         3'd3: if (wire_to_cut == 3'd3 && state == 3'd3) begin 
                             internal_state <= 3'd4; wire_cut <= 3'd3; 
-                            end else if (wire_to_cut == 3'd3 && (state == 3'b010 || state == 3'b101))begin 
+                            end else if (state == 3'b010 || state == 3'b101 || state == 3'b011)begin 
                                 wire_cut <= 3'd7; 
                             end
                         3'd4: if (wire_to_cut == 3'd4 && state == 3'd5) begin 
                                 internal_state <= 3'd5; wire_cut <= 3'd4; 
-                            end else if (wire_to_cut == 3'd4 && state == 3'b101) begin 
+                            end else if (state == 3'b101 || state == 3'b010) begin 
                                 wire_cut <= 3'd7; 
                             end
                         3'd5: if (wire_to_cut == 3'd5 && state == 3'd2) begin 
