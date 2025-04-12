@@ -1,0 +1,62 @@
+`timescale 1ns / 1ps
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+//  FILL IN THE FOLLOWING INFORMATION:
+//  STUDENT A NAME: 
+//  STUDENT B NAME:
+//  STUDENT C NAME: 
+//  STUDENT D NAME:  
+//
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module Top_Student (
+    input clk,
+    output [7:0]JB
+);
+//Pixel display
+reg reset;
+wire [15:0]oled_data;
+wire [12:0]pixel_index;
+wire fb, sending_pixels, sample_pixel;
+
+//Slow clocks
+wire clk_6p25mhz;
+
+//Pixel coordinates
+wire [6:0]x;
+wire [5:0]y;
+
+wire [15:0]victory_data;  
+
+flexible_clock_divider my_6p25mhz_clk (.basys_clock(clk), .m(32'b0111), .my_slow_clock(clk_6p25mhz));
+
+convert_to_xy xy_coordinates (.pixel_index(pixel_index), .x(x), .y(y));
+
+victory_screen(
+        .x(x),
+        .y(y),
+        .victory_data(victory_data)
+    );
+    
+ assign oled_data = victory_data;
+ 
+ Oled_Display led_display (
+                .clk(clk_6p25mhz),
+                .reset(0),
+                .frame_begin(fb),
+                .sending_pixels(sending_pixels),
+                .sample_pixel(sample_pixel),
+                .pixel_index(pixel_index),
+                .pixel_data(oled_data),
+                .cs(JB[0]),
+                .sdin(JB[1]),
+                .sclk(JB[3]),
+                .d_cn(JB[4]),
+                .resn(JB[5]),
+                .vccen(JB[6]),
+                .pmoden(JB[7])
+        );
+
+endmodule
