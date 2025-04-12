@@ -134,7 +134,7 @@ wire sample_tick;
 
     // --- Generate Sample (Fixed Maximum Volume) ---
     wire [7:0] raw_sample = sin_lut[lut_addr];
-    wire [15:0] modulated_sample = raw_sample * 8'd50; // 最大音量
+    wire [15:0] modulated_sample = raw_sample * 8'd255; // 最大音量
     wire [7:0] sample = playing ? modulated_sample[15:8] : 8'd0;
 
     // --- PWM Generator (8-bit resolution) ---
