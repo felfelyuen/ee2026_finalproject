@@ -22,6 +22,7 @@
 
 module button_handler_two(
     input CLK, //use a 5HZ clock
+    input RESET,
     input UPbtn,
     input DOWNbtn,
     input RIGHTbtn,
@@ -40,6 +41,9 @@ module button_handler_two(
     
     always @(posedge CLK) begin 
         if (game_pause == 0) begin
+        end else
+        if (RESET == 0) begin
+            next_count = 181;
         end else
         if (next_count == 255 & CTRLbtn) begin
             next_count = begin_spot;

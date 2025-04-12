@@ -22,6 +22,7 @@
 
 module move_red_square_two(
     input CLK, //use 6.25MHZ clock
+    input RESET,
     input [6:0] x,
     input [5:0] y,
     input [7:0] count, //should update at 10HZ clock
@@ -37,9 +38,16 @@ module move_red_square_two(
     
     initial begin
     begin_spot = 181;
+    wire_to_cut = 3'b000;
     end
     
     always @(posedge CLK) begin
+        if (RESET == 0) begin
+        //we really hit the fuckin towers
+        begin_spot = 181;
+        wire_to_cut = 3'b000;
+        end
+        else
         if (count == 255) begin
         //we hit the fuckin towers
         user_square = 16'hFB30;

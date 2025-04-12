@@ -1,3 +1,4 @@
+
 `timescale 1ns / 1ps
 //////////////////////////////////////////////////////////////////////////////////
 // Company: 
@@ -19,10 +20,9 @@
 // 
 //////////////////////////////////////////////////////////////////////////////////
 
-
-
 module maze(
     input CLK,
+    input RESET,
     input [4:0] pb,
     input [6:0] x, 
     input [5:0] y,
@@ -53,10 +53,11 @@ module maze(
     debouncer dbounceLEFT (pb[2], SLOWCLK_2kHZ, LEFTbtn);
     debouncer dbounceCTRL (pb[4], SLOWCLK_2kHZ, CTRLbtn);
 
-    button_handler_two buttonner (SLOWCLK_10HZ, UPbtn, DOWNbtn, RIGHTbtn, LEFTbtn, CTRLbtn, counter, maze_state, begin_spot, pausesw, counter);
-    show_maze_two task2 (SLOWCLK_6_25MHZ, x, y, counter, maze_state, olede);
-    move_red_square_two redmove (SLOWCLK_6_25MHZ, x, y, counter, maze_state, curr_colour, redsquare, wire_to_cut, begin_spot);
+    button_handler_two buttonner (SLOWCLK_10HZ, RESET, DOWNbtn, UPbtn, LEFTbtn, RIGHTbtn, CTRLbtn, counter, maze_state, begin_spot, pausesw, counter);
+
+    move_red_square_two redmove (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, curr_colour, redsquare, wire_to_cut, begin_spot);
     switch_handler switcheroo (SLOWCLK_6_25MHZ, sw1, sw2, sw3, x, y, switchh);
-    assign oled_data = olede & redsquare & switchh;
+    show_maze_two task2 (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, redsquare, switchh, olede);
+    assign oled_data = olede;
     
 endmodule
