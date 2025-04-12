@@ -1,28 +1,56 @@
-module count_down (input clk, output reg[7:0]seg , output reg [3:0]ano,input reset );
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 2025/03/18 21:56:31
+// Design Name: 
+// Module Name: count_down
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module count_down (input clk, output reg[7:0]seg , output reg [3:0]ano,input reset, output reg lose );
     reg [2:0]count = 3'd0;
     wire slow_clk_1hz;
     wire slow_clk_400hz;
-    reg [6:0] counter;
+    reg [8:0] counter = 8'd199;
     reg [3:0]digit;
+    
    
-    integer singles,tens;
+    reg [3:0] hundrads,singles,tens;
     flexible_clock_divider f0 (.basys_clock(clk),.m(30'd50000000),.my_slow_clock(slow_clk_1hz));
     flexible_clock_divider f1 (.basys_clock(clk),.m(30'd125000),.my_slow_clock(slow_clk_400hz));
-    
 
+    initial begin
+    lose = 0;
+    end
     always @(posedge slow_clk_1hz or posedge reset) begin
         if (reset) begin
-            counter <= 99;
+            counter <= 8'd199;
         end else begin
-            if (counter < 7'd100 && counter >7'd0) begin
+            if (counter < 8'd200 && counter > 8'd0) begin
                 counter <= counter - 1;
+            end else if (counter == 8'd0) begin
+                lose <= 1;
             end else begin
-                counter <= 99;
+                counter <=8'd199;
             end 
         
         end
-        tens = counter % 10;
-        singles = counter / 10;      
+        hundrads <= counter / 8'd100;
+        tens <= (counter / 4'd10 ) % 4'd10;
+        singles <= counter % 4'd10;      
     end
     always @(posedge slow_clk_400hz)begin
         if (count == 3) begin
@@ -31,9 +59,9 @@ module count_down (input clk, output reg[7:0]seg , output reg [3:0]ano,input res
             count <= count + 1;
         end
         case(count)
-            3'd0:begin ano <= 4'b1110;digit <= singles;end
-            3'd1:begin ano <= 4'b1101;digit <= tens; end
-            3'd2:ano <= 4'b1111;
+            3'd0:begin ano <= 4'b1011;digit <= singles;end
+            3'd1:begin ano <= 4'b1110;digit <= tens; end
+            3'd2:begin ano <= 4'b1101; digit <= hundrads; end
             3'd3:ano <= 4'b1111;
         endcase
         case (digit)
