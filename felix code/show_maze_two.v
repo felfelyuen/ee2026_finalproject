@@ -33,7 +33,7 @@ module show_maze_two(
     );
     
     reg [7:0] t_state; wire [15:0] startscrn; reg [15:0] damaze;
-    start_screen starterpac (x, y, startscrn);
+    felix_start_screen starterpac (x, y, startscrn);
     
     always @(posedge CLK) begin
         if (RESET == 0) begin
