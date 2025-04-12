@@ -1,22 +1,19 @@
 module audio_gen_bomb (
     input wire clk,          
-    input wire reset,        
-    input wire btn,          
-    output wire pwm_out,     
+    input wire [1:0] sw,     //win/lose one-hot input
+    
+    output wire pwm_out,     // PWM output
     output wire gain,        
     output wire shutdown_n   
 );
     // --- Sample Rate Generator (16kHz) ---
-    reg [12:0] sample_cnt = 0;
-    wire sample_tick = (sample_cnt == 13'd6249); // 100MHz / 16000 - 1
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            sample_cnt <= 0;
-        else if (sample_tick)
-            sample_cnt <= 0;
-        else
-            sample_cnt <= sample_cnt + 1;
-    end
+reg reset = 0;
+wire sample_tick;
+        flexible_clock_divider sample_clk_gen (
+            .basys_clock(clk),
+            .m(32'd3124),        // m = 3,124 for 16 kHz
+            .my_slow_clock(sample_tick)
+        );
 
     // --- Sine Lookup Table (256 values) ---
     reg [7:0] sin_lut[0:255];
@@ -88,38 +85,39 @@ module audio_gen_bomb (
     end
 
     // --- Playback Control ---
-    reg playing;
+    reg playing = 0;
     reg [13:0] playback_cnt;
-    always @(posedge clk or posedge reset) begin
+    always @( posedge sample_tick) begin
         if (reset) begin
             playing <= 0;
             playback_cnt <= 0;
-        end else if (btn_posedge && !playing) begin
-            playing <= 1;
-            playback_cnt <= 0;
-        end else if (playing && sample_tick) begin
-            if (playback_cnt == 14'd15999)
+            
+        end else if (sw == 2'b01 || sw == 2'b10) begin
+            
+            if (playback_cnt == 14'd15999) begin
                 playing <= 0;
-            else
+                
+            end else begin
                 playback_cnt <= playback_cnt + 1;
+                playing <= 1;
+            end
+            
+        end else if (sw == 2'b00 || sw == 2'b11) begin
+            playing <= 0;
+            playback_cnt <= 0;
         end
     end
-
-    // --- Button Edge Detector ---
-    reg btn_prev;
-    wire btn_posedge = (btn && !btn_prev);
-    always @(posedge clk or posedge reset) begin
-        if (reset)
-            btn_prev <= 0;
-        else
-            btn_prev <= btn;
-    end
+    
+    
+        
+    
 
     // --- Frequency Step Modulation ---
     wire [15:0] freq_step;
     freq_control freq_ctrl (
         .clk(clk),
         .playing(playing),
+        .sw(sw),
         .playback_cnt(playback_cnt),
         .freq_step(freq_step)
     );
@@ -127,22 +125,24 @@ module audio_gen_bomb (
     // --- Phase Accumulator for Frequency Control ---
     reg [15:0] phase_acc = 0;
     wire [7:0] lut_addr = phase_acc[15:8];
-    always @(posedge clk or posedge reset) begin
+    always @(posedge sample_tick) begin
         if (reset)
             phase_acc <= 0;
-        else if (sample_tick && playing)
+        else if (playing)
             phase_acc <= phase_acc + freq_step;
     end
 
     // --- Generate Sample (Fixed Maximum Volume) ---
     wire [7:0] raw_sample = sin_lut[lut_addr];
-    wire [15:0] modulated_sample = raw_sample * 8'd255; // 最大音量
+    wire [15:0] modulated_sample = raw_sample * 8'd50; // 最大音量
     wire [7:0] sample = playing ? modulated_sample[15:8] : 8'd0;
 
     // --- PWM Generator (8-bit resolution) ---
     reg [7:0] pwm_cnt = 0;
-    always @(posedge clk or posedge reset) begin
+    always @(posedge clk) begin
         if (reset)
+            pwm_cnt <= 0;
+        else if (pwm_cnt == 255)
             pwm_cnt <= 0;
         else
             pwm_cnt <= pwm_cnt + 1;
@@ -150,28 +150,64 @@ module audio_gen_bomb (
     assign pwm_out = (pwm_cnt < sample);
 
     // --- GPIO Control ---
-    assign gain = 1'b0;       
-    assign shutdown_n = 1'b1; 
+    assign gain = 1'b0;       // 高音量
+    assign shutdown_n = 1'b1; // 使能
 
 endmodule
-////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////
 module freq_control (
     input wire clk,              
+    input wire [1:0] sw,         
     input wire playing,          
     input wire [13:0] playback_cnt, 
     output reg [15:0] freq_step  
 );
     always @(posedge clk) begin
         if (playing)
-            if (playback_cnt <= 16'd1600)
-                freq_step <= 16'd2143; // 523 Hz
-            else if (playback_cnt <= 16'd3200)
-                freq_step <= 16'd2700; // 659 Hz
-            else if (playback_cnt <= 14'd4800)
-                freq_step <= 16'd3210; // 784 Hz
-            else
-                freq_step <= 16'd4286; // 1046 Hz
+            case (sw)
+                2'b01: begin
+                    if (playback_cnt <= 16'd1600)
+                        freq_step <= 16'd2143; // 523 Hz
+                    else if (playback_cnt <= 16'd3200)
+                        freq_step <= 16'd2700; // 659 Hz
+                    else if (playback_cnt <= 14'd4800)
+                        freq_step <= 16'd3210; // 784 Hz
+                    else
+                        freq_step <= 16'd4286; // 1046 Hz
+                end
+                2'b10: begin
+                    if (playback_cnt <= 16'd3200)
+                        freq_step <= 16'd2429; // 523 Hz
+                    else if (playback_cnt <= 16'd4800)
+                        freq_step <= 16'd1800; // 659 Hz
+                    else
+                        freq_step <= 16'd1254; // 1046 Hz
+                end
+                default:
+                    freq_step <= 16'd0;
+            endcase
         else 
             freq_step <= 16'd0;
     end
+endmodule
+
+////////////////////////////////////////////////////////////
+module flexible_clock_divider(
+    input basys_clock,
+    input [31:0]m,
+    output reg my_slow_clock
+    );
+    
+    reg [31:0] COUNT;
+    
+    initial begin
+        COUNT = 0;
+        my_slow_clock = 1;
+    end
+    
+    always @ (posedge basys_clock) begin
+        COUNT <= ( COUNT == m ) ? 0 : COUNT + 1;
+        my_slow_clock <= ( COUNT == m ) ? ~my_slow_clock : my_slow_clock;
+    end
+    
 endmodule
