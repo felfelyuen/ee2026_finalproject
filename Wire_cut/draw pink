@@ -1,0 +1,56 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 18.03.2025 15:06:19
+// Design Name: 
+// Module Name: draw_func_p
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module draw_func_p(
+    input [2:0] cursor_state,
+    input [2:0] internal_state, 
+    input [6:0] x, 
+    input [5:0] y, 
+    output reg [15:0] pink_oled_data
+);
+
+    localparam PINK  = 16'b11111_100000_01101;
+    localparam WHITE = 16'b11111_111111_11111;
+
+    wire x_bar = (x >= 62 && x <= 67);
+    wire edge_section = (y <= 26 || y >= 37);
+    wire center_white_section = (x >= 57 && x <= 59 || x >= 63 && x <= 67 || x >= 71 && x <= 73) && (y >= 30 && y <= 33);
+
+    wire is_cursor = (cursor_state == 3'd4);
+    wire is_cut = internal_state >= 3'd2;
+
+    always @(*) begin
+        pink_oled_data = 0;
+
+        if (!is_cut && !is_cursor) begin
+            if (x_bar) pink_oled_data = PINK;
+        end else if (!is_cut && is_cursor) begin
+            if (x_bar) pink_oled_data = PINK;
+            if (center_white_section) pink_oled_data = WHITE;
+        end else if (is_cut && !is_cursor) begin
+            if (x_bar && edge_section) pink_oled_data = PINK;
+        end else if (is_cut && is_cursor) begin
+            if (x_bar && edge_section) pink_oled_data = PINK;
+            if (center_white_section) pink_oled_data = WHITE;
+        end
+    end
+
+endmodule
