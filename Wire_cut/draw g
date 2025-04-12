@@ -1,0 +1,56 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 18.03.2025 15:06:19
+// Design Name: 
+// Module Name: draw_func_g
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module draw_func_g(
+    input [2:0] cursor_state,
+    input [2:0] internal_state, 
+    input [6:0] x, 
+    input [5:0] y, 
+    output reg [15:0] green_oled_data
+);
+
+    localparam GREEN = 16'b00000_111111_00000;
+    localparam WHITE = 16'b11111_111111_11111;
+
+    wire x_bar = (x >= 28 && x <= 33);
+    wire edge_section = (y <= 26 || y >= 37);
+    wire center_white_section = (x >= 23 && x <= 25 || x >= 29 && x <= 33 || x >= 37 && x <= 39) && (y >= 30 && y <= 33);
+
+    wire is_cursor = (cursor_state == 3'd2);
+    wire is_cut = internal_state >= 3'd6;
+
+    always @(*) begin
+        green_oled_data = 0;
+
+        if (!is_cut && !is_cursor) begin
+            if (x_bar) green_oled_data = GREEN;
+        end else if (!is_cut && is_cursor) begin
+            if (x_bar) green_oled_data = GREEN;
+            if (center_white_section) green_oled_data = WHITE;
+        end else if (is_cut && !is_cursor) begin
+            if (x_bar && edge_section) green_oled_data = GREEN;
+        end else if (is_cut && is_cursor) begin
+            if (x_bar && edge_section) green_oled_data = GREEN;
+            if (center_white_section) green_oled_data = WHITE;
+        end
+    end
+
+endmodule
