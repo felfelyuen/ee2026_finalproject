@@ -32,7 +32,8 @@ module maze(
     input pausesw,
     input [2:0] curr_colour,
     output [15:0] oled_data,
-    output [2:0] wire_to_cut
+    output [2:0] wire_to_cut,
+    output led
     );
     wire SLOWCLK_6_25MHZ; wire SLOWCLK_10HZ; 
     wire SLOWCLK_2kHZ;
@@ -55,9 +56,10 @@ module maze(
 
     button_handler_two buttonner (SLOWCLK_10HZ, RESET, DOWNbtn, UPbtn, LEFTbtn, RIGHTbtn, CTRLbtn, counter, maze_state, begin_spot, pausesw, counter);
 
-    move_red_square_two redmove (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, curr_colour, redsquare, wire_to_cut, begin_spot);
+    move_red_square_two redmove (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, 3'b101, redsquare, wire_to_cut, begin_spot);
     switch_handler switcheroo (SLOWCLK_6_25MHZ, sw1, sw2, sw3, x, y, switchh);
     show_maze_two task2 (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, redsquare, switchh, olede);
+    test_with_led testerr (SLOWCLK_6_25MHZ, wire_to_cut, led);
     assign oled_data = olede;
     
 endmodule
