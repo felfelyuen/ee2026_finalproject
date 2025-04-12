@@ -1,0 +1,57 @@
+`timescale 1ns / 1ps
+
+//////////////////////////////////////////////////////////////////////////////////
+//
+//  FILL IN THE FOLLOWING INFORMATION:
+//  STUDENT A NAME: 
+//  STUDENT B NAME:
+//  STUDENT C NAME: 
+//  STUDENT D NAME:  
+//
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module Top_Student_ryan ( 
+    input [6:0] x,
+    input [5:0] y,
+    input [15:0] sw,
+    input [4:0] pb,
+    input slow_clock,     
+    output [15:0] oled_data,
+    output [15:0] led       
+    );
+
+
+    wire [2:0] internal_state;
+    wire [2:0] cursor_state; 
+    wire is_connected;
+    wire [2:0] wire_to_cut;
+    wire [2:0] wire_cut;
+
+    assign led[2:0] = wire_cut;
+    assign wire_to_cut = sw[15:13];
+    assign is_connected = sw[12];
+    assign led [5:3] = wire_to_cut;
+    assign led [8:6] = internal_state;
+    assign led [11:9] = cursor_state;
+     
+
+    cursor_pos fa1 ( .is_connected(is_connected),
+       .sw(sw[3:0]),
+       .pb(pb),
+       .wire_to_cut(wire_to_cut),
+       .slow_clock(slow_clock),
+       .state(cursor_state),
+       .wire_cut(wire_cut),
+       .internal_state(internal_state));
+       
+       output_logic ol (
+           .slow_clk(slow_clock),
+           .cursor_state(cursor_state),
+           .internal_state(internal_state),
+           .oled_data(oled_data),
+           .x(x),
+           .y(y));
+   
+
+endmodule
