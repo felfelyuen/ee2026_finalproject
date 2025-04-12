@@ -45,7 +45,7 @@ module maze(
     flexible_clock_divider clock2kHZ (CLK, 15'h61A7, SLOWCLK_2kHZ);
     
     wire [7:0] counter; wire [15:0] redsquare; wire [15:0] olede;
-    wire [7:0] nextcounter; wire [15:0] switchh; wire [7:0] begin_spot; wire pauser;
+    wire [7:0] nextcounter; wire [15:0] switchh; wire [7:0] begin_spot;
     
     debouncer dbounceUP (pb[0], SLOWCLK_2kHZ, UPbtn);
     debouncer dbounceDOWN (pb[1], SLOWCLK_2kHZ, DOWNbtn);
@@ -55,7 +55,7 @@ module maze(
 
     button_handler_two buttonner (SLOWCLK_10HZ, RESET, DOWNbtn, UPbtn, LEFTbtn, RIGHTbtn, CTRLbtn, counter, maze_state, begin_spot, pausesw, counter);
 
-    move_red_square_two redmove (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, curr_colour, redsquare, wire_to_cut, begin_spot);
+    move_red_square_two redmove (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, 3'b010, redsquare, wire_to_cut, begin_spot);
     switch_handler switcheroo (SLOWCLK_6_25MHZ, sw1, sw2, sw3, x, y, switchh);
     show_maze_two task2 (SLOWCLK_6_25MHZ, RESET, x, y, counter, maze_state, redsquare, switchh, olede);
     assign oled_data = olede;

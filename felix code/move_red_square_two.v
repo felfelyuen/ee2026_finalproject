@@ -62,9 +62,7 @@ module move_red_square_two(
                 begin_spot = 31;
                 //GO TO THE CUTTER
                 wire_to_cut = 3'b001;
-                end else begin
-                wire_to_cut = 3'b111;
-                end
+                end 
             end else
             if (count == 113) begin
             //second checkpoint
@@ -73,9 +71,7 @@ module move_red_square_two(
                 begin_spot = 113;
                 //GO TO THE CUTTER
                 wire_to_cut = 3'b010;
-                end else begin
-                wire_to_cut = 3'b111;
-                end
+                end 
             end else
             if (count == 178) begin
             //third checkpoint
@@ -84,8 +80,6 @@ module move_red_square_two(
                 begin_spot = 178;
                 //GO TO THE CUTTER
                 wire_to_cut = 3'b011;
-                end else begin
-                wire_to_cut = 3'b111;
                 end
             end else
             if (count == 37) begin
@@ -95,8 +89,6 @@ module move_red_square_two(
                 begin_spot = 37;
                 //GO TO THE CUTTER
                 wire_to_cut = 3'b100;
-                end else begin
-                wire_to_cut = 3'b111;
                 end
             end else
             if (count == 139) begin 
@@ -106,15 +98,13 @@ module move_red_square_two(
                 begin_spot = 139;
                 //GO TO THE CUTTER
                 wire_to_cut = 3'b101;
-                end else begin
-                wire_to_cut = 3'b111;
-                end          
+                end   
             end
         //all squares need to show this
             //show the red square within that count
             row = count / 18;
             column = count % 18;
-            if (y > (9 + (row * 5)) & (y < (13 + (row* 5))) & (x > (column * 5)) & (x < 4 + (column * 5) )) begin
+            if (y > (9 + (row * 5)) & (y < (13 + (row* 5))) & (x >= (column * 5)) & (x < 3 + (column * 5) )) begin
                 user_square = 16'h93A0;
             end
             else begin
