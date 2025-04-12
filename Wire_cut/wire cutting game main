@@ -1,0 +1,108 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: 
+// Engineer: 
+// 
+// Create Date: 18.03.2025 15:22:38
+// Design Name: 
+// Module Name: cursor_pos
+// Project Name: 
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+module cursor_pos(
+    input is_connected,
+    input [3:0] sw,
+    input [4:0] pb,
+    input [2:0] wire_to_cut,
+    input slow_clock,
+    output reg [2:0] state = 3'd1,
+    output reg [2:0] wire_cut = 3'd0,
+    output reg [2:0] internal_state = 3'd1
+);
+
+    reg pb3_last, pb2_last, pb4_last;
+    reg go_right, go_left;
+    reg confirm_latched = 0;
+
+    reg [2:0] confirm_stable_counter = 0;
+    reg confirm_debounced = 0;
+
+    always @(posedge slow_clock) begin
+        // Button edge detection
+        go_right <= (pb[3] && ~pb3_last);
+        go_left  <= (pb[2] && ~pb2_last);
+
+        // Clamp movement within valid bounds (up to state 5 only)
+        if (go_right && state < 3'd5 && sw[0] == 1 && sw[3:1] == 3'b010) begin
+            state <= state + 1;
+        end else if (go_left && state > 3'd1 && sw[0] == 1 && sw[3:1] == 3'b010) begin
+            state <= state - 1;
+        end
+
+        // Confirm button debounce logic
+        if (pb[4] == 1 && pb4_last == 1) begin
+            if (confirm_stable_counter < 3)
+                confirm_stable_counter <= confirm_stable_counter + 1;
+        end else begin
+            confirm_stable_counter <= 0;
+        end
+
+        confirm_debounced <= (confirm_stable_counter == 3);
+
+        pb3_last <= pb[3];
+        pb2_last <= pb[2];
+        pb4_last <= pb[4];
+
+        if (sw[0] == 1 && sw[3:1] == 3'b010) begin
+            if (confirm_debounced && !confirm_latched) begin
+                confirm_latched <= 1;
+                if (is_connected) begin
+                    case (internal_state)
+                        3'd1: if (wire_to_cut == 3'd1 && state == 3'd4) begin 
+                                internal_state <= 3'd2; wire_cut <= 3'd1; 
+                            end else begin 
+                                wire_cut <= 3'd7; 
+                            end
+                        3'd2: if (wire_to_cut == 3'd2 && state == 3'd1) begin 
+                            internal_state <= 3'd3; wire_cut <= 3'd2;
+                        end else if (wire_to_cut == 3'd2 && state != 3'b100) begin 
+                            wire_cut <= 3'd7; 
+                        end
+                        3'd3: if (wire_to_cut == 3'd3 && state == 3'd3) begin 
+                            internal_state <= 3'd4; wire_cut <= 3'd3; 
+                            end else if (wire_to_cut == 3'd3 && (state == 3'b010 || state == 3'b101))begin 
+                                wire_cut <= 3'd7; 
+                            end
+                        3'd4: if (wire_to_cut == 3'd4 && state == 3'd5) begin 
+                                internal_state <= 3'd5; wire_cut <= 3'd4; 
+                            end else if (wire_to_cut == 3'd4 && state == 3'b101) begin 
+                                wire_cut <= 3'd7; 
+                            end
+                        3'd5: if (wire_to_cut == 3'd5 && state == 3'd2) begin 
+                                internal_state <= 3'd6; wire_cut <= 3'd5; 
+                            end
+                        default: wire_cut <= 3'd7;
+                    endcase
+                end else begin
+                    wire_cut <= 3'd7;
+                end
+            end else if (!confirm_debounced) begin
+                confirm_latched <= 0;
+            end
+        end else if (sw[0] == 0) begin
+            internal_state <= 3'd1;
+            wire_cut <= 0;
+        end
+    end
+
+endmodule
