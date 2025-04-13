@@ -59,7 +59,7 @@ module show_maze_two(
                         end else if (t_state == 113) begin
                             damaze = 16'hF800;
                         end else if (t_state == 139) begin
-                            damaze = 16'h07E0;
+                            damaze = 16'hFFFF;
                         end else if (t_state == 178) begin
                             damaze = 16'h001F;
                         end else begin
@@ -70,7 +70,7 @@ module show_maze_two(
                     damaze = 16'h0000;
                 end
             end
-            olede = damaze & redsquare & switchh;
+            olede = damaze & redsquare;
         end
     end
 endmodule
