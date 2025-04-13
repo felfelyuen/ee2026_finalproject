@@ -3,7 +3,7 @@
 // Company: 
 // Engineer: 
 // 
-// Create Date: 03/11/2025 07:58:15 PM
+// Create Date: 13.03.2025 22:21:18
 // Design Name: 
 // Module Name: flexible_clock_divider
 // Project Name: 
@@ -21,21 +21,20 @@
 
 
 module flexible_clock_divider(
-    input basys_clock,
-    input [31:0]m,
-    output reg my_slow_clock
+    input basys_clk,
+    input [31:0] m,
+    output reg slow_clk
     );
     
     reg [31:0] COUNT;
-    
+        
     initial begin
         COUNT = 0;
-        my_slow_clock = 1;
+        slow_clk = 1;
     end
     
-    always @ (posedge basys_clock) begin
+    always @ (posedge basys_clk) begin
         COUNT <= ( COUNT == m ) ? 0 : COUNT + 1;
-        my_slow_clock <= ( COUNT == m ) ? ~my_slow_clock : my_slow_clock;
+        slow_clk <= ( COUNT == m ) ? ~slow_clk : slow_clk;
     end
-    
 endmodule
